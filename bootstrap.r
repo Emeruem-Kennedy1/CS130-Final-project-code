@@ -203,6 +203,7 @@ groupyearfe1_cl <- coeftest(groupyearfe1, vcov = vcovCL, cluster = ~identitygrou
 
 #or modelsummary
 models <- list(pooled1, countryfe1, groupfe1, countryearfe1, groupyearfe1)
+modelsummary(models, stars = TRUE, coef_omit = ".*factor|Intercept")
 
 
 
@@ -297,3 +298,15 @@ print("country-year fe model")
 print(boot.countryearfe$t0[2:14])
 print("group-year fe model")
 print(boot.groupyearfe$t0[2:14])
+
+## confidence intervals for the bootstrap models
+print("pooled model")
+print(boot.ci(boot.pooled, type = "perc", index = 1:13, conf = 0.95))
+print("country fe model")
+print(boot.ci(boot.countryfe, type = "perc", index = 1:13, conf = 0.95))
+print("group fe model")
+print(boot.ci(boot.groupfe, type = "perc", index = 1:13, conf = 0.95))
+print("country-year fe model")
+print(boot.ci(boot.countryearfe, type = "perc", index = 1:13, conf = 0.95))
+print("group-year fe model")
+print(boot.ci(boot.groupyearfe, type = "perc", index = 1:13, conf = 0.95))
