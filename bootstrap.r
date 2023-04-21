@@ -212,6 +212,7 @@ models <- list(pooled1, countryfe1, groupfe1, countryearfe1, groupyearfe1)
 #### remove NAs from the data for the important variables
 
 library(tree)
+library(boot)
 
 # split the data into a training and test set
 set.seed(123)
@@ -250,3 +251,49 @@ print(paste("country-year fe model test accuracy:", mean(countryearfe1_tree_boot
 groupyearfe1_tree_boot <- predict(groupyearfe1_tree, backlashdata_test, type = "class")
 print(paste("group-year fe model training accuracy:", mean(groupyearfe1_tree_boot == backlashdata_train$backlash)))
 print(paste("group-year fe model accuracy:", mean(groupyearfe1_tree_boot == backlashdata_test$backlash)))
+
+
+## running the original models using bootstraped data
+alpha.fn <- function(data, index) {
+  fit <- glm(backlash ~ leader_arrest + mass_arrest_12 + repression_10days + repression_50days + share_income_food_log + cult_event + pre_election_period + post_election_period + context_protest + democracy + security_apparatus + avg_income_pc_logged + ongoing_armedconflict, family = binomial(link = logit), data = data)
+  return(coef(fit))
+}
+
+alpha.fn2 <- function(data, index) {
+  fit <- glm(backlash ~ leader_arrest + mass_arrest_12 + repression_10days + repression_50days + share_income_food_log + cult_event + pre_election_period + post_election_period + context_protest + democracy + security_apparatus + avg_income_pc_logged + ongoing_armedconflict + factor(country), family = binomial(link = logit), data = data)
+  return(coef(fit))
+}
+
+alpha.fn3 <- function(data, index) {
+  fit <- glm(backlash ~ leader_arrest + mass_arrest_12 + repression_10days + repression_50days + share_income_food_log + cult_event + pre_election_period + post_election_period + context_protest + democracy + security_apparatus + avg_income_pc_logged + ongoing_armedconflict + factor(identitygroup), family = binomial(link = logit), data = data)
+  return(coef(fit))
+}
+
+alpha.fn4 <- function(data, index) {
+  fit <- glm(backlash ~ leader_arrest + mass_arrest_12 + repression_10days + repression_50days + share_income_food_log + cult_event + pre_election_period + post_election_period + context_protest + democracy + security_apparatus + avg_income_pc_logged + ongoing_armedconflict + factor(country) + factor(year), family = binomial(link = logit), data = data)
+  return(coef(fit))
+}
+
+alpha.fn5 <- function(data, index) {
+  fit <- glm(backlash ~ leader_arrest + mass_arrest_12 + repression_10days + repression_50days + share_income_food_log + cult_event + pre_election_period + post_election_period + context_protest + democracy + security_apparatus + avg_income_pc_logged + ongoing_armedconflict + factor(identitygroup) + factor(year), family = binomial(link = logit), data = data)
+  return(coef(fit))
+}
+
+# Running the bootstrap
+boot.pooled <- boot(data = backlashdata, statistic = alpha.fn, R = 1000)
+boot.countryfe <- boot(data = backlashdata, statistic = alpha.fn2, R = 1000)
+boot.groupfe <- boot(data = backlashdata, statistic = alpha.fn3, R = 1000)
+boot.countryearfe <- boot(data = backlashdata, statistic = alpha.fn4, R = 1000)
+boot.groupyearfe <- boot(data = backlashdata, statistic = alpha.fn5, R = 1000)
+
+##printing the results of the bootstrap models excluding the intercept and the factor variables
+print("pooled model")
+print(boot.pooled$t0[2:14])
+print("country fe model")
+print(boot.countryfe$t0[2:14])
+print("group fe model")
+print(boot.groupfe$t0[2:14])
+print("country-year fe model")
+print(boot.countryearfe$t0[2:14])
+print("group-year fe model")
+print(boot.groupyearfe$t0[2:14])
